@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<title>Projeto Saúde para todos</title>
+<style>
+  body, html { margin:0; padding:0; font:16px "Lato", sans-serif; }
+  body { display:flex; min-height:100vh; }
+
+  /* Menu lateral */
+  aside {
+    position: fixed; top:0; left:0;
+    width:250px; height:100%; background:#0077b6;
+    padding:20px; box-sizing:border-box; overflow-y:auto;
+    color:#fff; border-right:2px solid #00b4d8;
+    z-index:1000; transform:translateX(-100%);
+    transition:transform 0.3s ease;
+  }
+  aside.active { transform:translateX(0); }
+  aside h3 { margin-top:0; font-size:22px; color:#90e0ef; text-align:center; cursor:pointer; }
+  aside ul { list-style:none; padding:0; }
+  aside ul li {
+    margin:12px 0; padding:8px;
+    background:#00b4d8; border-radius:8px; text-align:center;
+    font-weight:bold; cursor:pointer;
+    opacity:0; transform:translateX(-20px);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  aside.active ul li { opacity:1; transform:translateX(0); }
+  aside.active ul li:nth-child(1){transition-delay:0.1s;}
+  aside.active ul li:nth-child(2){transition-delay:0.2s;}
+  aside.active ul li:nth-child(3){transition-delay:0.3s;}
+  aside.active ul li:nth-child(4){transition-delay:0.4s;}
+  aside.active ul li:nth-child(5){transition-delay:0.5s;}
+
+  .menu-toggle {
+    position:fixed; top:15px; left:15px;
+    background:#00b4d8; color:white;
+    border:none; font-size:26px; padding:8px 12px;
+    border-radius:6px; cursor:pointer; z-index:1100;
+  }
+  .overlay {
+    position:fixed; top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.5); z-index:900; display:none;
+  }
+  .overlay.active { display:block; }
+
+  main { flex:1; margin-left:0; transition: margin-left 0.3s ease; }
+  main.shifted { margin-left:250px; }
+
+  /* Parallax */
+  .parallax {
+    position: relative;
+    background-attachment: fixed; background-position:center;
+    background-repeat:no-repeat; background-size:cover;
+    min-height:100vh; display:flex; justify-content:center; align-items:center;
+    color:white; font-size:36px; text-shadow:2px 2px 4px #000; z-index:1;
+    text-align:center; padding:20px;
+  }
+  .parallax::before {
+    content:""; position:absolute; top:0; left:0; right:0; bottom:0;
+    background: rgba(0, 119, 182, 0.4); z-index:0;
+  }
+  .parallax > * { position:relative; z-index:2; }
+  #home { background-image:url('imagens/clinica.jpg'); }
+  #galeria { background-image:url('imagens/fundoclinica.jpg'); }
+
+  /* Carrossel de fotos */
+  .carousel { position:relative; width:100%; max-width:800px; margin:auto; overflow:hidden; border-radius:12px; box-shadow:0 0 10px rgba(0,0,0,0.3); }
+  .carousel img {
+    width:100%; position:absolute; top:0; left:0;
+    opacity:0; transition:opacity 0.5s ease-in-out;
+  }
+  .carousel img.active { opacity:1; position:relative; }
+  .carousel button {
+    position:absolute; top:50%; transform:translateY(-50%);
+    background:rgba(0,0,0,0.5); color:white;
+    border:none; padding:10px; cursor:pointer; font-size:24px; border-radius:6px;
+  }
+  .carousel .prev { left:10px; }
+  .carousel .next { right:10px; }
+
+  /* Formulário de serviços */
+  .form-agenda {
+    background: rgba(255,255,255,0.95); padding:20px; border-radius:10px;
+    max-width:400px; width:90%; box-shadow:0 4px 8px rgba(0,0,0,0.1);
+    margin:20px auto;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .form-agenda input, .form-agenda textarea {
+    width:100%; padding:10px; border:1px solid #00b4d8; border-radius:6px; font-size:15px;
+  }
+  .form-agenda button {
+    background:#0077b6; color:white; font-weight:bold; border:none;
+    padding:12px; border-radius:8px; cursor:pointer; transition:0.3s;
+  }
+  .form-agenda button:hover { background:#005f87; transform:scale(1.05); }
+
+  /* Feedback em carrossel */
+  .feedback-carousel {
+    position: relative; max-width: 600px; margin: 20px auto;
+    overflow: hidden; border-radius: 8px; background: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1); padding: 20px; min-height:100px;
+  }
+  .feedback-item { opacity:0; transition:opacity 0.6s ease-in-out; position:absolute; top:0; left:0; width:100%; text-align:center; padding:20px; word-wrap: break-word; max-height:200px; overflow-y:auto; }
+  .feedback-item.active { opacity:1; position:relative; }
+  .feedback-carousel button { position:absolute; top:50%; transform:translateY(-50%); background: rgba(0,0,0,0.5); color:white; border:none; padding:8px 12px; cursor:pointer; font-size:20px; border-radius:6px; z-index:10; }
+  .feedback-carousel .prev-feedback { left:10px; }
+  .feedback-carousel .next-feedback { right:10px; }
+  .feedback-indicators { text-align:center; margin-top:15px; }
+  .feedback-indicators span { display:inline-block; width:10px; height:10px; margin:0 4px; background:#ccc; border-radius:50%; cursor:pointer; transition:background 0.3s; }
+  .feedback-indicators span.active { background:#0077b6; }
+
+  #feedback-form { background: rgba(144, 224, 239, 0.9); padding: 20px; border-radius: 12px; max-width: 500px; margin: 20px auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 12px; }
+  #feedback-form input, #feedback-form textarea { width:100%; padding:12px; border:1px solid #0077b6; border-radius:8px; font-size:16px; }
+  #feedback-form button { background:#00b4d8; color:white; font-weight:bold; border:none; padding:12px; border-radius:8px; cursor:pointer; transition:0.3s; }
+  #feedback-form button:hover { background:#0077b6; transform:scale(1.05); }
+
+  .feedback-section h2 { text-align:center; color:#0077b6; margin-bottom:15px; }
+
+  footer { background:#0077b6; color:white; text-align:center; padding:20px; }
+  .footer-icon { color:white; text-decoration:none; font-weight:bold; display:inline-flex; align-items:center; gap:6px; transition:color 0.3s; }
+  .footer-icon i { font-size:20px; }
+  .footer-icon:hover { color:#90e0ef; }
+
+  @media(max-width:768px){
+    aside { width:200px; }
+    main.shifted { margin-left:200px; }
+    .parallax { background-attachment: scroll; font-size:28px; }
+    #feedback-form { padding: 15px; }
+  }
+</style>
+</head>
+<body>
+
+<button class="menu-toggle">☰</button>
+<div class="overlay"></div>
+
+<aside>
+  <h3>🏥 Serviços</h3>
+  <ul>
+    <li><a href="#consultas">Consultas Médicas</a></li>
+    <li><a href="#exames">Exames Laboratoriais</a></li>
+    <li><a href="#odontologia">Odontologia</a></li>
+    <li><a href="#psicologia">Psicologia</a></li>
+    <li><a href="#fisioterapia">Fisioterapia</a></li>
+  </ul>
+</aside>
+
+<main>
+  <!-- Home -->
+  <section id="home" class="parallax">
+    <h1>Bem-vindo ao Projeto saúde para todos!</h1>
+  </section>
+
+  <!-- Galeria -->
+  <section id="galeria" class="parallax">
+    <div class="carousel">
+      <img src="imagens/unidade.jpg" class="active" alt="posto de saude">
+      <img src="imagens/images.jpg" alt="Campanha">
+      <img src="imagens/campanha.jpg" alt="campanha de doacao">
+      <button class="prev">&#10094;</button>
+      <button class="next">&#10095;</button>
+    </div>
+  </section>
+
+  <!-- Serviços com formulários -->
+  <section id="consultas" class="parallax">
+    <h2>Agendamento – Consultas Médicas</h2>
+    <form class="form-agenda" data-servico="Consultas Médicas">
+      <input type="text" placeholder="Seu nome" required>
+      <input type="tel" placeholder="Telefone/WhatsApp" required>
+      <input type="date" required>
+      <textarea placeholder="Mensagem (opcional)"></textarea>
+      <button type="submit">📲 Agendar Consultas</button>
+    </form>
+  </section>
+
+  <section id="exames" class="parallax">
+    <h2>Agendamento – Exames Laboratoriais</h2>
+    <form class="form-agenda" data-servico="Exames Laboratoriais">
+      <input type="text" placeholder="Seu nome" required>
+      <input type="tel" placeholder="Telefone/WhatsApp" required>
+      <input type="date" required>
+      <textarea placeholder="Mensagem (opcional)"></textarea>
+      <button type="submit">📲 Agendar Exame</button>
+    </form>
+  </section>
+
+  <section id="odontologia" class="parallax">
+    <h2>Agendamento – Odontologia</h2>
+    <form class="form-agenda" data-servico="Odontologia">
+      <input type="text" placeholder="Seu nome" required>
+      <input type="tel" placeholder="Telefone/WhatsApp" required>
+      <input type="date" required>
+      <textarea placeholder="Mensagem (opcional)"></textarea>
+      <button type="submit">📲 Agendar Odontologia</button>
+    </form>
+  </section>
+
+  <section id="psicologia" class="parallax">
+    <h2>Agendamento – Psicologia</h2>
+    <form class="form-agenda" data-servico="Psicologia">
+      <input type="text" placeholder="Seu nome" required>
+      <input type="tel" placeholder="Telefone/WhatsApp" required>
+      <input type="date" required>
+      <textarea placeholder="Mensagem (opcional)"></textarea>
+      <button type="submit">📲 Agendar Psicologia</button>
+    </form>
+  </section>
+
+  <section id="fisioterapia" class="parallax">
+    <h2>Agendamento – Fisioterapia</h2>
+    <form class="form-agenda" data-servico="Fisioterapia">
+      <input type="text" placeholder="Seu nome" required>
+      <input type="tel" placeholder="Telefone/WhatsApp" required>
+      <input type="date" required>
+      <textarea placeholder="Mensagem (opcional)"></textarea>
+      <button type="submit">📲 Agendar Fisioterapia</button>
+    </form>
+  </section>
+
+  <!-- Feedback -->
+  <section class="feedback-section">
+    <h2>O que dizem nossos pacientes</h2>
+    <div class="feedback-carousel">
+      <button class="prev-feedback">&#10094;</button>
+      <button class="next-feedback">&#10095;</button>
+      <div class="feedback-indicators"></div>
+    </div>
+    <form id="feedback-form">
+      <input type="text" id="cliente-nome" placeholder="Seu nome" required>
+      <textarea id="cliente-feedback" placeholder="Deixe seu depoimento" required rows="4"></textarea>
+      <button type="submit">Enviar Feedback</button>
+    </form>
+  </section>
+
+  <footer>
+    <p>📍 Av. Central, 1000 – Centro – Passo Fundo, RS</p>
+    <p>📞 (54) 3020-0000 | 📲 (54) 99701-0289</p>
+    <p>
+      <a href="https://www.instagram.com/sua_clinica" target="_blank" class="footer-icon">
+        <i class="fab fa-instagram"></i> Instagram
+      </a>
+    </p>
+    <p>&copy; 2025 Clínica Saúde Total - Todos os Direitos Reservados</p>
+  </footer>
+</main>
+
+<script>
+  // Formulários de serviços com confirmação
+  document.querySelectorAll(".form-agenda").forEach(form => {
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const nome = this.querySelector("input[type='text']").value;
+      const telefone = this.querySelector("input[type='tel']").value;
+      const data = this.querySelector("input[type='date']").value;
+      const mensagem = this.querySelector("textarea").value;
+      const servico = this.getAttribute("data-servico");
+
+      const texto = `Olá, gostaria de agendar ${servico}.\n\nNome: ${nome}\nTelefone: ${telefone}\nData: ${data}\nMensagem: ${mensagem}`;
+
+      if(confirm(`Confirma envio do agendamento para ${servico}?`)) {
+        const url = `https://wa.me/5554997010289?text=${encodeURIComponent(texto)}`;
+        window.open(url, "_blank");
+      }
+    });
+  });
+
+  // Menu lateral
+  const menuBtn = document.querySelector(".menu-toggle");
+  const aside = document.querySelector("aside");
+  const overlay = document.querySelector(".overlay");
+  const main = document.querySelector("main");
+  const serviceItems = document.querySelectorAll("aside ul li");
+  function toggleMenu(){ aside.classList.toggle("active"); overlay.classList.toggle("active"); main.classList.toggle("shifted"); }
+  menuBtn.addEventListener("click",toggleMenu);
+  overlay.addEventListener("click",toggleMenu);
+  serviceItems.forEach(item=>item.addEventListener("click",toggleMenu));
+  document.querySelector("aside h3").addEventListener("click",toggleMenu);
+
+  // Carrossel de fotos
+  let index = 0;
+  const slides = document.querySelectorAll(".carousel img");
+  const prev = document.querySelector(".carousel .prev");
+  const next = document.querySelector(".carousel .next");
+  function showSlide(i){ slides.forEach(s=>s.classList.remove("active")); slides[i].classList.add("active"); }
+  function nextSlide(){ index=(index+1)%slides.length; showSlide(index); }
+  function prevSlideFunc(){ index=(index-1+slides.length)%slides.length; showSlide(index); }
+  next.addEventListener("click",nextSlide);
+  prev.addEventListener("click",prevSlideFunc);
+  setInterval(nextSlide,4000);
+
+  // Feedback
+  const feedbackCarousel = document.querySelector(".feedback-carousel");
+  const feedbackIndicators = document.querySelector(".feedback-indicators");
+  let feedbacks = JSON.parse(localStorage.getItem("feedbacks") || "[]");
+  let currentFeedback = 0;
+
+  function renderFeedbackCarousel(){
+    feedbackCarousel.querySelectorAll(".feedback-item").forEach(e=>e.remove());
+    feedbackIndicators.innerHTML = "";
+    feedbacks.forEach((f,i)=>{
+      const div = document.createElement("div");
+      div.classList.add("feedback-item");
+      if(i===currentFeedback) div.classList.add("active");
+      div.innerHTML = `<strong>${f.nome}</strong>: ${f.comentario}`;
+      feedbackCarousel.insertBefore(div, feedbackCarousel.querySelector(".prev-feedback"));
+      const span = document.createElement("span");
+      if(i===currentFeedback) span.classList.add("active");
+      span.addEventListener("click",()=>{ currentFeedback=i; updateActiveFeedback(); });
+      feedbackIndicators.appendChild(span);
+    });
+  }
+  renderFeedbackCarousel();
+
+  function updateActiveFeedback(){
+    const items = document.querySelectorAll(".feedback-item");
+    const indicators = document.querySelectorAll(".feedback-indicators span");
+    items.forEach((item,i)=>item.classList.toggle("active",i===currentFeedback));
+    indicators.forEach((ind,i)=>ind.classList.toggle("active",i===currentFeedback));
+  }
+
+  function showNextFeedback(){ if(feedbacks.length>0){ currentFeedback=(currentFeedback+1)%feedbacks.length; updateActiveFeedback(); } }
+  function showPrevFeedback(){ if(feedbacks.length>0){ currentFeedback=(currentFeedback-1+feedbacks.length)%feedbacks.length; updateActiveFeedback(); } }
+
+  document.querySelector(".next-feedback").addEventListener("click",showNextFeedback);
+  document.querySelector(".prev-feedback").addEventListener("click",showPrevFeedback);
+  if (feedbacks.length > 0) { setInterval(()=>{ showNextFeedback(); },5000); }
+
+  document.getElementById("feedback-form").addEventListener("submit",e=>{
+    e.preventDefault();
+    const nome=document.getElementById("cliente-nome").value.trim();
+    const comentario=document.getElementById("cliente-feedback").value.trim();
+    if(!nome || !comentario) return alert("Preencha nome e comentário!");
+    feedbacks.push({nome,comentario});
+    localStorage.setItem("feedbacks",JSON.stringify(feedbacks));
+    document.getElementById("feedback-form").reset();
+    currentFeedback=feedbacks.length-1;
+    renderFeedbackCarousel();
+  });
+</script>
+</body>
+</html>
